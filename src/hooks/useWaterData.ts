@@ -6,6 +6,8 @@ export interface UserSettings {
     activityLevel: 'low' | 'moderate' | 'high';
     dailyGoal: number; // in ml
     isPremium: boolean;
+    installDate: string; // ISO Date String
+    notificationsEnabled?: boolean;
 }
 
 export interface DayRecord {
@@ -19,7 +21,12 @@ const DEFAULT_SETTINGS: UserSettings = {
     activityLevel: 'moderate',
     dailyGoal: 2000,
     isPremium: false,
+    installDate: '',
+    notificationsEnabled: false,
 };
+
+const TRIAL_DAYS = 7;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export function useWaterData() {
     const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
@@ -33,7 +40,15 @@ export function useWaterData() {
         const storedHistory = localStorage.getItem('water_history');
         const storedOnboarded = localStorage.getItem('water_onboarded');
 
-        if (storedSettings) setSettings(JSON.parse(storedSettings));
+        if (storedSettings) {
+            const parsed = JSON.parse(storedSettings);
+            // Migration: Add installDate if missing for existing users
+            if (!parsed.installDate) {
+                parsed.installDate = new Date().toISOString();
+                localStorage.setItem('water_settings', JSON.stringify(parsed));
+            }
+            setSettings(parsed);
+        }
         if (storedHistory) setHistory(JSON.parse(storedHistory));
         if (storedOnboarded) setOnboarded(JSON.parse(storedOnboarded));
 
@@ -45,8 +60,12 @@ export function useWaterData() {
         localStorage.setItem('water_settings', JSON.stringify(newSettings));
     };
 
-    const completeOnboarding = (data: UserSettings) => {
-        saveSettings(data);
+    const completeOnboarding = (data: Omit<UserSettings, 'installDate'>) => {
+        const fullData: UserSettings = {
+            ...data,
+            installDate: new Date().toISOString()
+        };
+        saveSettings(fullData);
         setOnboarded(true);
         localStorage.setItem('water_onboarded', 'true');
     };
@@ -72,6 +91,19 @@ export function useWaterData() {
         return record ? record.amount : 0;
     };
 
+    const getTrialDetails = () => {
+        if (!settings.installDate) return { daysLeft: 7, isExpired: false };
+
+        const installTime = new Date(settings.installDate).getTime();
+        const now = Date.now();
+        const diffDays = (now - installTime) / ONE_DAY_MS;
+
+        const daysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - diffDays));
+        const isExpired = diffDays >= TRIAL_DAYS;
+
+        return { daysLeft, isExpired };
+    };
+
     return {
         settings,
         saveSettings,
@@ -80,6 +112,7 @@ export function useWaterData() {
         completeOnboarding,
         addWater,
         getTodayIntake,
+        getTrialDetails,
         loading
     };
 }

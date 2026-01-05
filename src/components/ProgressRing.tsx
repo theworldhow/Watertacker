@@ -13,6 +13,20 @@ export default function ProgressRing({ radius, stroke, progress }: ProgressRingP
 
     return (
         <div style={{ position: 'relative', width: radius * 2, height: radius * 2, margin: '0 auto' }}>
+            {/* Gradient Definition */}
+            <svg width="0" height="0">
+                <defs>
+                    <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#00E0FF" />
+                        <stop offset="100%" stopColor="#2D5AF5" />
+                    </linearGradient>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                </defs>
+            </svg>
+
             <svg
                 height={radius * 2}
                 width={radius * 2}
@@ -20,22 +34,24 @@ export default function ProgressRing({ radius, stroke, progress }: ProgressRingP
             >
                 {/* Background Ring */}
                 <circle
-                    stroke="var(--ios-gray-5)"
+                    stroke="rgba(255,255,255,0.08)"
                     strokeWidth={stroke}
                     fill="transparent"
                     r={normalizedRadius}
                     cx={radius}
                     cy={radius}
                 />
-                {/* Progress Ring */}
+
+                {/* Progress Ring with Glow */}
                 <circle
-                    stroke="var(--ios-blue)"
+                    stroke="url(#progressGradient)"
                     strokeWidth={stroke}
                     strokeDasharray={circumference + ' ' + circumference}
                     style={{
                         strokeDashoffset,
-                        transition: 'stroke-dashoffset 0.5s ease-in-out',
-                        strokeLinecap: 'round'
+                        transition: 'stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                        strokeLinecap: 'round',
+                        filter: 'url(#glow)'
                     }}
                     fill="transparent"
                     r={normalizedRadius}
@@ -43,22 +59,6 @@ export default function ProgressRing({ radius, stroke, progress }: ProgressRingP
                     cy={radius}
                 />
             </svg>
-            {/* Center Content */}
-            <div
-                style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                }}
-            >
-                <span style={{ fontSize: '36px', fontWeight: 700 }}>{Math.round(progress)}%</span>
-            </div>
         </div>
     );
 }

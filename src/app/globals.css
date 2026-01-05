@@ -1,42 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-  /* iOS / Premium Colors */
-  --ios-blue: #007AFF;
-  --ios-cyan: #32ADE6;
-  --ios-indigo: #5856D6;
-  --ios-white: #FFFFFF;
+  /* Premium Colors */
+  --primary: #2D5AF5; /* Electric Blue */
+  --primary-glow: rgba(45, 90, 245, 0.5);
+  --secondary: #00E0FF; /* Cyan Neon */
+  --accent: #FF2E93; /* Hot Pink for CTAs */
+  --success: #32D74B;
+  --warning: #FFD60A;
+  --danger: #FF453A;
+
+  /* Backgrounds */
+  --bg-dark: #0A0A0E;
+  --bg-card: rgba(28, 28, 32, 0.65);
+  --bg-card-border: rgba(255, 255, 255, 0.12);
 
   /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #007AFF 0%, #32ADE6 100%);
-  --gradient-bg: linear-gradient(180deg, #F2F2F7 0%, #FFFFFF 100%);
-  --gradient-glow: conic-gradient(from 180deg at 50% 50%, #007AFF 0deg, #32ADE6 180deg, #007AFF 360deg);
+  --grad-primary: linear-gradient(135deg, #2D5AF5 0%, #00E0FF 100%);
+  --grad-accent: linear-gradient(135deg, #FF2E93 0%, #FF8A00 100%);
+  --grad-dark: radial-gradient(circle at top right, #1a1a2e 0%, #0A0A0E 100%);
 
-  /* Semantic Colors */
-  --bg-primary: #FFFFFF;
-  --bg-secondary: #F2F2F7;
-  --text-primary: #000000;
-  --text-secondary: rgba(60, 60, 67, 0.6);
-  --separator: rgba(60, 60, 67, 0.36);
+  /* Text */
+  --text-main: #FFFFFF;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --text-dark: #000000;
 
-  /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-border: rgba(255, 255, 255, 0.5);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
-
-  --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-primary: #000000;
-    --bg-secondary: #000000;
-    --text-primary: #FFFFFF;
-    --text-secondary: rgba(235, 235, 245, 0.6);
-    --separator: rgba(84, 84, 88, 0.65);
-
-    --gradient-bg: linear-gradient(180deg, #000000 0%, #1C1C1E 100%);
-    --glass-bg: rgba(28, 28, 30, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.1);
-  }
+  --font-main: 'Outfit', sans-serif;
 }
 
 * {
@@ -47,74 +36,131 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: var(--font-family);
-  background: var(--gradient-bg);
-  background-attachment: fixed;
-  /* Full height gradient */
-  color: var(--text-primary);
+  font-family: var(--font-main);
+  background: var(--bg-dark);
+  color: var(--text-main);
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
   overflow-x: hidden;
-  user-select: none;
-  height: 100vh;
 }
 
-/* Utilities */
+/* Glassmorphism Utilities */
 .glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(25px);
-  -webkit-backdrop-filter: blur(25px);
-  border: 1px solid var(--glass-border);
+  background: var(--bg-card);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid var(--bg-card-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
-.card {
-  background-color: var(--bg-primary);
-  /* Fallback */
-  background: rgba(255, 255, 255, 0.7);
-
-  @media (prefers-color-scheme: dark) {
-    background: rgba(28, 28, 30, 0.7);
-  }
-
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 20px;
-  /* More rounded */
-  padding: 20px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  /* Softer, deeper shadow */
-  border: 1px solid var(--glass-border);
 }
 
+/* Card */
+.card {
+  composes: glass;
+  border-radius: 24px;
+  padding: 24px;
+  transition: transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card:active {
+  transform: scale(0.98);
+}
+
+/* Typography */
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h1 { font-size: 32px; }
+h2 { font-size: 24px; }
+h3 { font-size: 18px; }
+
+/* Buttons */
 .btn {
+  border: none;
+  cursor: pointer;
+  padding: 16px 24px;
+  border-radius: 16px;
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 24px;
-  border-radius: 16px;
-  font-weight: 600;
-  font-size: 17px;
-  transition: transform 0.1s ease, opacity 0.2s;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
-}
-
-.btn:active {
-  transform: scale(0.96);
-  opacity: 0.9;
+  gap: 8px;
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
-  color: white;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background: var(--grad-primary);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px var(--primary-glow);
 }
 
+.btn-primary:active {
+  transform: scale(0.96);
+  box-shadow: 0 4px 12px -4px var(--primary-glow);
+}
+
+.btn-accent {
+  background: var(--grad-accent);
+  color: #fff;
+  box-shadow: 0 8px 20px -6px rgba(255, 46, 147, 0.5);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-muted);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+/* Container */
 .container {
   max-width: 480px;
   margin: 0 auto;
   min-height: 100vh;
   padding: 24px;
-  padding-bottom: 110px;
+  padding-bottom: 120px; /* Space for TabBar */
   position: relative;
+  background: var(--grad-dark); /* Subtle background gradient */
+}
+
+/* Animations */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 0 0 rgba(45, 90, 245, 0.4); }
+  70% { box-shadow: 0 0 0 20px rgba(45, 90, 245, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(45, 90, 245, 0); }
 }
