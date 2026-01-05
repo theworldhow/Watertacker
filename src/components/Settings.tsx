@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useWaterData } from '@/hooks/useWaterData';
 import Button from './Button';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 export default function Settings() {
     const { settings, saveSettings, getTrialDetails } = useWaterData();
@@ -105,22 +106,42 @@ export default function Settings() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px' }}>
                     <span>Notifications</span>
                     <div
-                        onClick={() => {
+                        onClick={async () => {
                             const newState = !notifications;
                             setNotifications(newState);
                             saveSettings({ ...settings, notificationsEnabled: newState });
 
                             if (newState) {
-                                if ('Notification' in window) {
-                                    Notification.requestPermission().then(permission => {
-                                        if (permission === 'granted') {
-                                            new Notification("Reminders Enabled", {
-                                                body: "We'll remind you to drink water every 2 hours."
-                                            });
-                                        }
-                                    });
-                                } else {
-                                    alert("Notifications not supported in this browser.");
+                                try {
+                                    // Request permission using Capacitor's LocalNotifications
+                                    const permission = await LocalNotifications.requestPermissions();
+
+                                    if (permission.display === 'granted') {
+                                        // Schedule a test notification
+                                        await LocalNotifications.schedule({
+                                            notifications: [
+                                                {
+                                                    title: "Reminders Enabled",
+                                                    body: "We'll remind you to drink water every 2 hours.",
+                                                    id: 1,
+                                                    schedule: { at: new Date(Date.now() + 1000) }, // 1 second from now
+                                                    sound: undefined,
+                                                    attachments: undefined,
+                                                    actionTypeId: "",
+                                                    extra: null
+                                                }
+                                            ]
+                                        });
+                                    } else {
+                                        alert("Please enable notifications in your device settings.");
+                                        setNotifications(false);
+                                        saveSettings({ ...settings, notificationsEnabled: false });
+                                    }
+                                } catch (error) {
+                                    console.error("Notification error:", error);
+                                    alert("Could not enable notifications. Please check your device settings.");
+                                    setNotifications(false);
+                                    saveSettings({ ...settings, notificationsEnabled: false });
                                 }
                             }
                         }}

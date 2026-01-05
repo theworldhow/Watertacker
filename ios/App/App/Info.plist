@@ -47,5 +47,11 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs access to your microphone to enable voice commands for logging your water intake hands-free.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>This app uses speech recognition to understand your voice commands like "I drank water" for easy hydration tracking.</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app sends you reminders to drink water throughout the day to help you stay hydrated.</string>
 </dict>
 </plist>

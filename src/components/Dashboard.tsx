@@ -14,12 +14,10 @@ export default function Dashboard() {
     const [adding, setAdding] = useState(false);
 
     const handleAdd = (amount: number, type: string) => {
-        // Feature Gating Example: Only Water is free after trial expires, unless Premium
-        if (type !== 'Water' && isExpired && !settings.isPremium) {
-            alert("🔒 Premium Feature\n\nUpgrade to track Coffee, Tea, Soda, and Juice!");
+        if (isExpired && !settings.isPremium) {
+            alert("🔒 Trial Expired\n\nPlease upgrade to Premium in Settings to continue tracking your hydration!");
             return;
         }
-
         setAdding(true);
         addWater(amount);
         setTimeout(() => setAdding(false), 200);
@@ -105,6 +103,11 @@ export default function Dashboard() {
 
             {/* Voice Control */}
             <VoiceControl onAdd={handleAdd} isPremium={settings.isPremium} />
+            {isExpired && !settings.isPremium && (
+                <p style={{ color: 'var(--danger)', fontSize: '12px', textAlign: 'center', marginTop: '-20px', marginBottom: '20px', fontWeight: 600 }}>
+                    Feature locked. Please upgrade to continue.
+                </p>
+            )}
 
             {/* Main Stats */}
             <div style={{ textAlign: 'center', marginBottom: '48px', position: 'relative' }}>
@@ -129,8 +132,7 @@ export default function Dashboard() {
 
             {/* Quick Adds - Horizontal Scroll */}
             <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                Quick Add
-                {isExpired && !settings.isPremium && <span style={{ fontSize: '12px', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: '8px', color: 'var(--text-muted)' }}>Premium Locked 🔒</span>}
+                {isExpired && !settings.isPremium ? '🔒 Trial Expired' : 'Quick Add'}
             </h3>
 
             <div
@@ -142,7 +144,10 @@ export default function Dashboard() {
                 style={{
                     display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '20px', margin: '0 -24px', paddingLeft: '24px', paddingRight: '24px',
                     scrollbarWidth: 'none', msOverflowStyle: 'none',
-                    cursor: isDown ? 'grabbing' : 'grab'
+                    cursor: isDown ? 'grabbing' : (isExpired && !settings.isPremium) ? 'not-allowed' : 'grab',
+                    opacity: (isExpired && !settings.isPremium) ? 0.6 : 1,
+                    filter: (isExpired && !settings.isPremium) ? 'grayscale(0.8)' : 'none',
+                    pointerEvents: (isExpired && !settings.isPremium) ? 'none' : 'auto'
                 }}>
                 {drinkTypes.map((drink) => (
                     <div
@@ -157,13 +162,12 @@ export default function Dashboard() {
                             minWidth: '110px', height: '140px', borderRadius: '24px',
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px',
                             cursor: 'pointer', position: 'relative',
-                            border: (drink.name !== 'Water' && isExpired && !settings.isPremium) ? '1px solid var(--bg-card-border)' : '1px solid rgba(255,255,255,0.1)',
-                            opacity: (drink.name !== 'Water' && isExpired && !settings.isPremium) ? 0.5 : 1
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            opacity: 1
                         }}
                     >
                         <div style={{
-                            fontSize: '40px',
-                            filter: (drink.name !== 'Water' && isExpired && !settings.isPremium) ? 'grayscale(1)' : 'none'
+                            fontSize: '40px'
                         }}>
                             {drink.icon}
                         </div>
@@ -172,11 +176,7 @@ export default function Dashboard() {
                             <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{drink.amount}ml</span>
                         </div>
 
-                        {(drink.name !== 'Water' && !settings.isPremium) && (
-                            <div style={{ position: 'absolute', top: '8px', right: '8px', fontSize: '12px' }}>
-                                🔒
-                            </div>
-                        )}
+
                     </div>
                 ))}
             </div>
