@@ -18,6 +18,19 @@
 /out/
 /github_pages/
 
+# static site in root (for GitHub Pages)
+/index.html
+/privacy.html
+/support.html
+/404.html
+/_next-found.html
+/_next/
+/_not-found/
+/*.svg
+/favicon.ico
+/icon.png
+/manifest.json
+
 # production
 /build
 
