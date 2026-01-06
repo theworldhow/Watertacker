@@ -102,7 +102,7 @@ export default function Dashboard() {
             </header>
 
             {/* Voice Control */}
-            <VoiceControl onAdd={handleAdd} isPremium={settings.isPremium} />
+            <VoiceControl onAdd={handleAdd} />
             {isExpired && !settings.isPremium && (
                 <p style={{ color: 'var(--danger)', fontSize: '12px', textAlign: 'center', marginTop: '-20px', marginBottom: '20px', fontWeight: 600 }}>
                     Feature locked. Please upgrade to continue.

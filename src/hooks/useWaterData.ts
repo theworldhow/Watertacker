@@ -29,30 +29,46 @@ const TRIAL_DAYS = 7;
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export function useWaterData() {
-    const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
-    const [history, setHistory] = useState<DayRecord[]>([]);
-    const [onboarded, setOnboarded] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [settings, setSettings] = useState<UserSettings>(() => {
+        if (typeof window === 'undefined') return DEFAULT_SETTINGS;
+        const stored = localStorage.getItem('water_settings');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                if (!parsed.installDate) {
+                    parsed.installDate = new Date().toISOString();
+                    localStorage.setItem('water_settings', JSON.stringify(parsed));
+                }
+                return parsed;
+            } catch {
+                return DEFAULT_SETTINGS;
+            }
+        }
+        return DEFAULT_SETTINGS;
+    });
+
+    const [history, setHistory] = useState<DayRecord[]>(() => {
+        if (typeof window === 'undefined') return [];
+        const stored = localStorage.getItem('water_history');
+        if (stored) {
+            try { return JSON.parse(stored); } catch { return []; }
+        }
+        return [];
+    });
+
+    const [onboarded, setOnboarded] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false;
+        const stored = localStorage.getItem('water_onboarded');
+        if (stored) {
+            try { return JSON.parse(stored); } catch { return false; }
+        }
+        return false;
+    });
+
+    // const [loading, setLoading] = useState(false); 
 
     useEffect(() => {
-        // Load from local storage
-        const storedSettings = localStorage.getItem('water_settings');
-        const storedHistory = localStorage.getItem('water_history');
-        const storedOnboarded = localStorage.getItem('water_onboarded');
-
-        if (storedSettings) {
-            const parsed = JSON.parse(storedSettings);
-            // Migration: Add installDate if missing for existing users
-            if (!parsed.installDate) {
-                parsed.installDate = new Date().toISOString();
-                localStorage.setItem('water_settings', JSON.stringify(parsed));
-            }
-            setSettings(parsed);
-        }
-        if (storedHistory) setHistory(JSON.parse(storedHistory));
-        if (storedOnboarded) setOnboarded(JSON.parse(storedOnboarded));
-
-        setLoading(false);
+        // Data is now loaded via lazy initialization
     }, []);
 
     const saveSettings = (newSettings: UserSettings) => {
@@ -112,7 +128,6 @@ export function useWaterData() {
         completeOnboarding,
         addWater,
         getTodayIntake,
-        getTrialDetails,
-        loading
+        getTrialDetails
     };
 }

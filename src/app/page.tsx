@@ -6,11 +6,11 @@ import Dashboard from '@/components/Dashboard';
 import History from '@/components/History';
 import Settings from '@/components/Settings';
 import TabBar from '@/components/TabBar';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 export default function Home() {
-  const { onboarded, completeOnboarding, loading, settings } = useWaterData();
+  const { onboarded, completeOnboarding, settings } = useWaterData();
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'history' | 'settings'>('dashboard');
 
   // Notification Logic
@@ -66,13 +66,7 @@ export default function Home() {
   }, [settings.notificationsEnabled]);
 
 
-  if (loading) {
-    return (
-      <main className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p>Loading...</p>
-      </main>
-    );
-  }
+
 
   if (!onboarded) {
     return <Onboarding onComplete={completeOnboarding} />;
