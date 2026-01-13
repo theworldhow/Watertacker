@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import ProgressRing from './ProgressRing';
 import Button from './Button';
-import { useWaterData } from '@/hooks/useWaterData';
+import { useWaterData } from '@/context/WaterDataContext';
 import VoiceControl from './VoiceControl';
 
 export default function Dashboard() {

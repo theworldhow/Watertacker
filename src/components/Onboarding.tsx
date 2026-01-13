@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from './Button';
-import { UserSettings } from '@/hooks/useWaterData';
+import { UserSettings } from '@/context/WaterDataContext';
 
 interface OnboardingProps {
     onComplete: (data: Omit<UserSettings, 'installDate'>) => void;

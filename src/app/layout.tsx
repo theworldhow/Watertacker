@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { WaterDataProvider } from "@/context/WaterDataContext";
 
 export const metadata: Metadata = {
   title: "Water Reminder",
@@ -28,7 +29,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <WaterDataProvider>
+          {children}
+        </WaterDataProvider>
+      </body>
     </html>
   );
 }

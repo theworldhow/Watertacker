@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useWaterData } from '@/hooks/useWaterData';
+import { useWaterData } from '@/context/WaterDataContext';
+import { usePurchases } from '@/hooks/usePurchases';
 import Button from './Button';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
@@ -8,9 +9,27 @@ export default function Settings() {
     const [notifications, setNotifications] = useState(settings.notificationsEnabled || false);
     const { daysLeft, isExpired } = getTrialDetails();
 
-    const handlePurchase = () => {
+    // Use the purchases hook with a callback to update settings
+    const { 
+        isPremium: purchasePremium, 
+        isLoading: purchaseLoading, 
+        purchase, 
+        restore, 
+        getPrice 
+    } = usePurchases(() => {
+        // Update settings when purchase succeeds
         saveSettings({ ...settings, isPremium: true });
-        alert('🎉 Lifetime Access Unlocked! \n(Reciept: $4.00 Charged)');
+    });
+
+    // Use either stored premium status or purchase hook status
+    const isPremiumUser = settings.isPremium || purchasePremium;
+
+    const handlePurchase = async () => {
+        await purchase();
+    };
+
+    const handleRestore = async () => {
+        await restore();
     };
 
     const handleReset = () => {
@@ -28,7 +47,7 @@ export default function Settings() {
             </header>
 
             {/* Premium / Trial Banner */}
-            {!settings.isPremium ? (
+            {!isPremiumUser ? (
                 <div className="card" style={{
                     marginBottom: '32px',
                     background: isExpired ? 'var(--grad-accent)' : 'var(--grad-primary)',
@@ -64,12 +83,40 @@ export default function Settings() {
                             style={{
                                 background: 'white',
                                 color: isExpired ? 'var(--accent)' : 'var(--primary)',
-                                fontWeight: 700
+                                fontWeight: 700,
+                                opacity: purchaseLoading ? 0.7 : 1,
                             }}
                             onClick={handlePurchase}
+                            disabled={purchaseLoading}
                         >
-                            {isExpired ? 'Unlock Lifetime Access ($4.00)' : 'Keep Forever ($4.00)'}
+                            {purchaseLoading 
+                                ? 'Processing...' 
+                                : isExpired 
+                                    ? `Unlock Lifetime Access (${getPrice()})` 
+                                    : `Keep Forever (${getPrice()})`
+                            }
                         </Button>
+
+                        {/* Restore Purchases Button */}
+                        <button
+                            onClick={handleRestore}
+                            disabled={purchaseLoading}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'rgba(255,255,255,0.8)',
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                marginTop: '12px',
+                                cursor: 'pointer',
+                                width: '100%',
+                                textAlign: 'center',
+                                textDecoration: 'underline',
+                                opacity: purchaseLoading ? 0.5 : 1,
+                            }}
+                        >
+                            Restore Previous Purchase
+                        </button>
                     </div>
                 </div>
             ) : (

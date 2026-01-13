@@ -1,6 +1,6 @@
 'use client';
 
-import { useWaterData } from '@/hooks/useWaterData';
+import { useWaterData } from '@/context/WaterDataContext';
 import Onboarding from '@/components/Onboarding';
 import Dashboard from '@/components/Dashboard';
 import History from '@/components/History';
@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 export default function Home() {
-  const { onboarded, completeOnboarding, settings } = useWaterData();
+  const { onboarded, completeOnboarding, settings, isLoading } = useWaterData();
   const [currentTab, setCurrentTab] = useState<'dashboard' | 'history' | 'settings'>('dashboard');
 
   // Notification Logic
@@ -67,6 +67,41 @@ export default function Home() {
 
 
 
+
+  // Show loading screen while data is being loaded
+  if (isLoading || onboarded === null) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        background: 'var(--bg-main)',
+        gap: '20px'
+      }}>
+        <div style={{
+          width: '80px',
+          height: '80px',
+          borderRadius: '50%',
+          background: 'var(--grad-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '40px',
+          animation: 'pulse 1.5s ease-in-out infinite'
+        }}>
+          💧
+        </div>
+        <style jsx>{`
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   if (!onboarded) {
     return <Onboarding onComplete={completeOnboarding} />;

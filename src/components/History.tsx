@@ -1,15 +1,17 @@
 import React from 'react';
-import { useWaterData } from '@/hooks/useWaterData';
+import { useWaterData } from '@/context/WaterDataContext';
 
 export default function History() {
     const { history, settings } = useWaterData();
     const goal = settings.dailyGoal;
     const [period, setPeriod] = React.useState<'week' | 'month' | 'year'>('week');
 
-    // Helper to format date
-    const formatDate = (dateStr: string) => {
-        const d = new Date(dateStr);
-        return d;
+    // Helper to get local date string (YYYY-MM-DD) without timezone issues
+    const getLocalDateString = (date: Date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     };
 
     const getData = () => {
@@ -21,7 +23,7 @@ export default function History() {
             for (let i = 6; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(d);
                 const dayName = d.toLocaleDateString('en-US', { weekday: 'short' });
                 const record = history.find(h => h.date === dateStr);
                 data.push({
@@ -35,7 +37,7 @@ export default function History() {
             for (let i = 29; i >= 0; i--) {
                 const d = new Date(today);
                 d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
+                const dateStr = getLocalDateString(d);
                 const record = history.find(h => h.date === dateStr);
                 data.push({
                     label: d.getDate().toString(),
@@ -79,15 +81,23 @@ export default function History() {
 
     const chartData = getData();
 
-    // Determine max value for scaling
-    // For year view, the "goal" reference is tricky. Let's use 30x daily goal for reference or just max value.
-    const getRefValue = () => {
-        if (period === 'year') return goal * 30; // Approx monthly goal
-        return goal;
+    // Determine max value for scaling - use a reasonable max that makes bars visible
+    const getMaxValue = () => {
+        const maxDataValue = Math.max(...chartData.map(d => d.amount), 0);
+        
+        if (period === 'year') {
+            // For year view, use monthly totals - max around goal * 30 days
+            return Math.max(maxDataValue, goal * 30) * 1.1;
+        }
+        
+        // For week/month view, use a max of 3500ml or the highest data point
+        // This ensures bars are nicely distributed
+        const baseMax = Math.max(maxDataValue, goal, 2000);
+        return Math.min(baseMax * 1.2, 4000); // Cap at 4000ml for visibility
     };
 
-    const refValue = getRefValue();
-    const maxVal = Math.max(...chartData.map(d => d.amount), refValue * 1.2);
+    const refValue = period === 'year' ? goal * 30 : goal;
+    const maxVal = getMaxValue();
 
     return (
         <div className="container" style={{ paddingBottom: '100px' }}>
@@ -132,34 +142,58 @@ export default function History() {
                     {period === 'week' ? 'Last 7 Days' : period === 'month' ? 'Last 30 Days' : 'Last 12 Months'}
                 </h3>
 
-                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '200px', gap: '4px' }}>
+                {/* Chart bars - using fixed pixel heights */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '220px', gap: '4px', paddingTop: '20px' }}>
                     {chartData.map((d, i) => {
-                        const height = Math.min((d.amount / maxVal) * 100, 100);
-                        const isGoalMet = d.amount >= (period === 'year' ? refValue * 0.8 : goal); // Looser goal for monthly avg?
+                        // Calculate height in pixels (max bar height = 160px)
+                        const maxBarHeight = 160;
+                        const hasData = d.amount > 0;
+                        const isGoalMet = d.amount >= (period === 'year' ? refValue * 0.8 : goal);
+                        
+                        // Calculate bar height in pixels
+                        let barHeightPx = 4; // Default for no data
+                        if (hasData) {
+                            const ratio = d.amount / maxVal;
+                            barHeightPx = Math.max(Math.round(ratio * maxBarHeight), 12); // Min 12px
+                        }
 
                         return (
-                            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-                                    <div
-                                        title={`${d.fullLabel}: ${d.amount}ml`}
-                                        style={{
-                                            width: period === 'month' ? '6px' : period === 'year' ? '16px' : '12px',
-                                            height: `${height}%`,
-                                            background: isGoalMet ? 'var(--ios-blue)' : 'var(--ios-cyan)',
-                                            opacity: isGoalMet ? 1 : 0.6,
-                                            borderRadius: '6px',
-                                            transition: 'height 0.5s ease',
-                                            minHeight: '4px'
-                                        }} />
-                                </div>
-                                <span style={{
-                                    fontSize: '11px',
-                                    color: 'var(--text-secondary)',
-                                    overflow: 'hidden',
-                                    whiteSpace: 'nowrap',
-                                    textOverflow: 'clip'
+                            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                                {/* Show amount above bar if has data */}
+                                <span style={{ 
+                                    fontSize: '9px', 
+                                    color: hasData ? '#22D3EE' : 'transparent', 
+                                    fontWeight: 600,
+                                    marginBottom: '4px',
+                                    height: '14px'
                                 }}>
-                                    {/* Show label sparsely for month view if needed */}
+                                    {d.amount > 0 ? d.amount : ''}
+                                </span>
+                                {/* Bar container */}
+                                <div style={{ 
+                                    height: `${maxBarHeight}px`, 
+                                    display: 'flex', 
+                                    alignItems: 'flex-end', 
+                                    justifyContent: 'center',
+                                    width: '100%'
+                                }}>
+                                    <div
+                                        style={{
+                                            width: period === 'month' ? '8px' : '16px',
+                                            height: `${barHeightPx}px`,
+                                            backgroundColor: hasData ? (isGoalMet ? '#4ADE80' : '#22D3EE') : 'rgba(255,255,255,0.15)',
+                                            borderRadius: '4px',
+                                            transition: 'height 0.3s ease',
+                                        }} 
+                                    />
+                                </div>
+                                {/* Day label */}
+                                <span style={{
+                                    fontSize: '10px',
+                                    color: 'rgba(255,255,255,0.5)',
+                                    marginTop: '6px',
+                                    height: '14px'
+                                }}>
                                     {period === 'month' && i % 5 !== 0 ? '' : d.label}
                                 </span>
                             </div>
